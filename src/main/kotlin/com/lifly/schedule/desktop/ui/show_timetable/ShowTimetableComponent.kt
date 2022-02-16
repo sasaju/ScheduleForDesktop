@@ -1,30 +1,49 @@
 package com.lifly.schedule.desktop.ui.show_timetable
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Window
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.subscribe
+import com.lifly.schedule.desktop.logic.Repository
+import com.lifly.schedule.desktop.logic.dao.SettingsSerializer
+import com.lifly.schedule.desktop.logic.model.AppSettings
 import com.lifly.schedule.desktop.navigation.Component
+import com.lifly.schedule.desktop.ui.SingleLineClass
 import com.lifly.schedule.desktop.ui.Test
 import java.util.logging.Logger
 
 class ShowTimetableComponent(
     private val componentContext: ComponentContext,
-): Component, ComponentContext by componentContext {
-    private val logger: Logger = Logger.getLogger("test")
+) : Component, ComponentContext by componentContext {
+    private val logger: Logger = Repository.logger
+    lateinit var settings:AppSettings
+
     init {
-        logger.warning("initShowTimetable")
+        println("ShowTimetableComponent实例化一次")
         lifecycle.subscribe(
-            onResume = { println("onResume") }
+            onCreate = {
+                logger.info{"onCreate"}
+                settings=SettingsSerializer.appSettings
+//                logger.info { Repository.loadAllCourseToOneByOne().toString() }
+            },
+            onResume = { logger.info{"onResume"} }
         )
     }
+
     @Composable
     override fun render() {
-        Test()
+        val scope = rememberCoroutineScope()
+        LaunchedEffect(Unit){
+            logger.info { settings.userVersion.toString() }
+        }
+        SingleLineClass(
+            Repository.loadAllCourseToOneByOne(),
+            0,
+        ){
+
+        }
     }
 }

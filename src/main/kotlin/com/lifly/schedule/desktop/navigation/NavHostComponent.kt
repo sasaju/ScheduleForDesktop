@@ -13,16 +13,20 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.jetbrains.Children
+import com.arkivanov.decompose.extensions.compose.jetbrains.animation.child.crossfade
 import com.arkivanov.decompose.router.*
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.lifly.schedule.desktop.ui.import_timetable.ImportTimetableComponent
 import com.lifly.schedule.desktop.ui.more.ShowMoreComponent
 import com.lifly.schedule.desktop.ui.show_timetable.ShowTimetableComponent
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Navigator
@@ -36,6 +40,7 @@ class NavHostComponent(
         childFactory = ::createScreenComponent
     )
 
+    private val index = MutableStateFlow(-1)
     /**
      * Factory function to create screen from given ScreenConfig
      */
@@ -52,7 +57,8 @@ class NavHostComponent(
                 screenConfig.name
             )
             is ScreenConfig.ImportTimetable -> ImportTimetableComponent(
-                componentContext
+                componentContext,
+                ::onLoginSuccess
             )
             else -> ShowTimetableComponent(
                 componentContext
@@ -64,8 +70,9 @@ class NavHostComponent(
     /**
      * Invoked when `GO` button clicked (InputScreen)
      */
-    private fun onGoClicked(name: String) {
-        router.push(ScreenConfig.Greeting(name))
+    private fun onLoginSuccess() {
+        router.bringToFront(ScreenConfig.ShowTimetable)
+        index.value = 0
     }
 
     /**
@@ -79,9 +86,14 @@ class NavHostComponent(
     /**
      * Renders screen as per request
      */
+    @OptIn(ExperimentalDecomposeApi::class)
     @Composable
     override fun render() {
         val nowIndex = rememberSaveable  { mutableStateOf(0) }
+        val nowIndex_ = index.collectAsState(-1)
+        LaunchedEffect(nowIndex_.value){
+            if (nowIndex_.value>=0){ nowIndex.value = nowIndex_.value }
+        }
         Row(modifier = Modifier.fillMaxSize()) {
             NavigationRail {
                 NavigationRailItem(
@@ -113,7 +125,7 @@ class NavHostComponent(
                 )
 
             }
-            Children(routerState = router.state) { that ->
+            Children(routerState = router.state, animation = crossfade()) { that ->
                 Box(modifier = Modifier.fillMaxSize()) {
                     that.instance.render()
                 }
