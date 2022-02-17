@@ -12,6 +12,7 @@
 ## 效果图
 ![img.png](img.png)
 
+
 ##开发相关
 - appData.db中有一部分初始数据
 - 开源部分已经移除网络层
@@ -27,6 +28,7 @@
 - [Exposed](https://github.com/JetBrains/Exposed)
 - [Compose For Desktop](https://www.jetbrains.com/lp/compose-desktop/)
 - [Ktor](https://github.com/ktorio/ktor)
+- [Decompose](https://github.com/arkivanov/Decompose)
 - [moshi](https://github.com/square/moshi)
 - [ksp](https://github.com/google/ksp)
 - [kotlin-logging](https://github.com/MicroUtils/kotlin-logging)
@@ -50,7 +52,6 @@
 - [ ] 平时成绩查询
 - [ ] 绩点、培养方案查询
 - [ ] 作业本功能
-- [ ] 完全迁移至[Jetpack Compose](https://developer.android.com/jetpack/compose)
 - [ ] 工具箱功能-公告
 - [ ] 工具箱功能-校历
 - [ ] 工具箱功能-其他
