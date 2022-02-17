@@ -13,7 +13,7 @@
 ![img.png](img.png)
 
 
-##开发相关
+## 开发相关
 - appData.db中有一部分初始数据
 - 开源部分已经移除网络层
 - UI：Compose For Desktop
