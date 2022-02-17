@@ -6,6 +6,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Snackbar
 import androidx.compose.material.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,44 +26,70 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lifly.schedule.desktop.logic.Repository
 import com.lifly.schedule.desktop.logic.model.OneByOneCourseBean
 import com.lifly.schedule.desktop.logic.model.getData
+import com.lifly.schedule.desktop.logic.util.pager.ExperimentalPagerApi
+import com.lifly.schedule.desktop.logic.util.pager.HorizontalPager
+import com.lifly.schedule.desktop.logic.util.pager.rememberPagerState
 import com.lifly.schedule.desktop.ui.show_timetable.*
+import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun Test(){
-    BoxWithConstraints(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            repeat(7){ colIndex ->
-                Column(modifier = Modifier.fillMaxWidth().weight(1F)){
-                    SingleClass2(getData()) {
-                        println(it.whichColumn)
-                    }
-                    if (colIndex == 2) {
-                        SingleClass2(getData()) {
-                            println(it.whichColumn)
-                        }
-                        SingleClass2(getData()) {
-                            println(it.whichColumn)
-                        }
-                        SingleClass2(getData()) {
-                            println(it.whichColumn)
-                        }
-
-                        SingleClass2(getData()) {
-                            println(it.whichColumn)
-                        }
-
-                    }
-                }
+fun ShowCourse(){
+    val state = rememberPagerState(initialPage = 0)
+    val scope = rememberCoroutineScope()
+    suspend fun jumpPage(target:Int){
+        when{
+            target>state.pageCount-1 -> {
+//                state.animateScrollToPage(0)
             }
+            target<0 ->{
+//                state.animateScrollToPage(state.pageCount-1)
+            }
+            else -> {
+                state.animateScrollToPage(target)
+            }
+        }
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth()
+    ){
+        Box(
+            modifier = Modifier
+                .width(30.dp)
+                .fillMaxHeight()
+                .clickable {
+                    scope.launch { jumpPage(state.currentPage-1) }
+                }
+            ,
+            contentAlignment = Alignment.Center
+        ){
+            Icon(Icons.Default.ArrowBack, null)
+        }
+        HorizontalPager(
+            state=state,
+            count = 18,
+            modifier = Modifier.weight(1F, true)
+        ) { page: Int ->
+            SingleLineClass(
+                Repository.loadAllCourseToOneByOne(),
+                page,
+            ) {}
+        }
+        Box(
+            modifier = Modifier
+                .width(30.dp)
+                .fillMaxHeight()
+                .clickable {
+                    scope.launch { jumpPage(state.currentPage+1) }
+                }
+            ,
+            contentAlignment = Alignment.Center
+        ){
+            Icon(Icons.Default.ArrowForward, null)
         }
     }
 }
@@ -107,7 +137,7 @@ fun SingleLineClass(
                 Text(
                     text = "${getDayOfDate(0, page)} 月",
                     modifier = Modifier.fillMaxWidth(),
-                    fontSize = 10.sp, textAlign = TextAlign.Center
+                    fontSize = 15.sp, textAlign = TextAlign.Center
                 )
             }
 
@@ -124,7 +154,7 @@ fun SingleLineClass(
                         Text(
                             text = textText,
                             modifier = Modifier.background(Color.Transparent),
-                            fontSize = 11.sp,
+                            fontSize = 15.sp,
                             textAlign = TextAlign.Center
                         )
                     } else {
@@ -139,8 +169,7 @@ fun SingleLineClass(
                                         )
                                     )
                                 ),
-                            fontSize = 11.sp,
-                            lineHeight = 10.sp,
+                            fontSize = 15.sp,
                             textAlign = TextAlign.Center,
                             color = Color.White
                         )
@@ -151,7 +180,7 @@ fun SingleLineClass(
 
 
         Row(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            Column(Modifier.weight(0.6F, true)) {
+            Column(Modifier.weight(0.64F, true)) {
                 // 时间列
                 repeat(11) {
                     Text(
@@ -159,14 +188,14 @@ fun SingleLineClass(
                             withStyle(style = ParagraphStyle(lineHeight = 6.sp)) {
                                 withStyle(
                                     style = SpanStyle(
-                                        fontSize = 18.sp,
+                                        fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold,
                                     )
                                 ) {
                                     append("${it + 1}")
                                 }
                             }
-                            withStyle(style = SpanStyle(fontSize = 10.sp)) {
+                            withStyle(style = SpanStyle(fontSize = 14.sp)) {
                                 append("${getStartTime(it + 1)}\n")
                                 append(getEndTime(it + 1))
                             }

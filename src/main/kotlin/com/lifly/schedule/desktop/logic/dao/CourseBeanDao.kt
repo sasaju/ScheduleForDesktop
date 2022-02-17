@@ -1,7 +1,10 @@
 package com.lifly.schedule.desktop.logic.dao
 
+import com.lifly.schedule.desktop.logic.Repository
 import com.lifly.schedule.desktop.logic.model.CourseBean
 import com.lifly.schedule.desktop.logic.model.CourseBeans
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.ReplaceStatement
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -10,18 +13,27 @@ import java.sql.Connection
 
 
 object CourseBeanDao {
+    init {
+        Repository.logger.info { "try crate table" }
+        create()
+    }
     private fun connect() {
         Database.connect("jdbc:sqlite:appData.db", "org.sqlite.JDBC")
         TransactionManager.manager.defaultIsolationLevel =
             Connection.TRANSACTION_SERIALIZABLE
+    }
 
+
+    private fun create(){
+        connect()
+        transaction {
+//            addLogger(StdOutSqlLogger)
+            SchemaUtils.create(CourseBeans)
+        }
     }
     fun insertCourseBeans(courseBeanList: List<CourseBean>): List<String> {
         connect()
         val a = transaction {
-            addLogger(StdOutSqlLogger)
-            SchemaUtils.create(CourseBeans)
-
             courseBeanList.map { courseBean ->
                 CourseBeans.replace {
                     it[campusName] = courseBean.campusName
@@ -42,8 +54,8 @@ object CourseBeanDao {
     }
 
     fun loadAllCourseBeans(): List<CourseBean> {
-        connect()
         val a = transaction{
+            SchemaUtils.create(CourseBeans)
             return@transaction CourseBeans.selectAll().map {
                 CourseBean(
                     campusName = it[CourseBeans.campusName],

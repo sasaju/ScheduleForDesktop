@@ -1,9 +1,7 @@
 package com.lifly.schedule.desktop.logic
 
 import com.lifly.schedule.desktop.logic.dao.CourseBeanDao
-import com.lifly.schedule.desktop.logic.model.CourseBean
-import com.lifly.schedule.desktop.logic.model.CourseBeans
-import com.lifly.schedule.desktop.logic.model.OneByOneCourseBean
+import com.lifly.schedule.desktop.logic.model.*
 import com.lifly.schedule.desktop.logic.network.NormalScheduleNetwork
 import com.lifly.schedule.desktop.logic.util.Convert
 import kotlinx.coroutines.flow.flow
@@ -28,7 +26,7 @@ object Repository {
         listOf("#b35c44", "#FFFFA8C3", "#FFDCE083"),
     )
     fun getId() = flow {
-        emit(NormalScheduleNetwork.getId())
+        emit(NormalScheduleNetwork.getId().id)
     }
     suspend fun getId2() = NormalScheduleNetwork.getId()
 
@@ -45,6 +43,7 @@ object Repository {
 
     fun loadAllCourseToOneByOne(): List<List<OneByOneCourseBean>> {
         val allBean = CourseBeanDao.loadAllCourseBeans()
+//        val allBean = listOf<CourseBean>()
         return Convert.courseBeanToOneByOne2(allBean, getDefaultString())
     }
 }

@@ -11,7 +11,7 @@ import io.ktor.serialization.gson.*
 import kotlinx.coroutines.withTimeout
 
 object NormalScheduleNetwork {
-    private const val baseUrl = "https://liflymark.top/"
+    private const val baseUrl = "https://127.0.0.1/"
     private val client = HttpClient(CIO){
         headersOf(HttpHeaders.UserAgent, "ktor-1.0")
         engine {
@@ -25,7 +25,7 @@ object NormalScheduleNetwork {
         install(ContentNegotiation){
             gson()
         }
-        install(Logging)
+//        install(Logging)
     }
 
     suspend fun getId() = CourseService.getId(baseUrl, client)

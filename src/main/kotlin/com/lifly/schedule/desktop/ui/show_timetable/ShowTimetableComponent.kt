@@ -1,18 +1,13 @@
 package com.lifly.schedule.desktop.ui.show_timetable
 
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.window.Window
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.lifly.schedule.desktop.logic.Repository
 import com.lifly.schedule.desktop.logic.dao.SettingsSerializer
 import com.lifly.schedule.desktop.logic.model.AppSettings
 import com.lifly.schedule.desktop.navigation.Component
-import com.lifly.schedule.desktop.ui.SingleLineClass
-import com.lifly.schedule.desktop.ui.Test
+import com.lifly.schedule.desktop.ui.ShowCourse
 import java.util.logging.Logger
 
 class ShowTimetableComponent(
@@ -39,11 +34,6 @@ class ShowTimetableComponent(
         LaunchedEffect(Unit){
             logger.info { settings.userVersion.toString() }
         }
-        SingleLineClass(
-            Repository.loadAllCourseToOneByOne(),
-            0,
-        ){
-
-        }
+        ShowCourse()
     }
 }

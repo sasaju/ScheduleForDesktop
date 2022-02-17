@@ -18,6 +18,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
+@OptIn(DelicateCoroutinesApi::class)
 class ImportTimetableComponent(
     private val componentContext: ComponentContext,
     private val onSuccess:()->Unit,
@@ -25,7 +26,7 @@ class ImportTimetableComponent(
 
     private val userId = MutableStateFlow("")
     init {
-        appGlobalScope.launch {
+        GlobalScope.launch {
             userId.value = Repository.getId2().id
         }
     }
@@ -35,6 +36,7 @@ class ImportTimetableComponent(
     @Composable
     override fun render() {
         val id = userId.collectAsState("")
+//        val id = Repository.getId().collectAsState("")
         val state = rememberScaffoldState()
         val scope = rememberCoroutineScope()
         Scaffold(
@@ -44,7 +46,6 @@ class ImportTimetableComponent(
                     if (courseResponse.status=="yes" || courseResponse.status=="no"){
                         scope.launch {
                             val a = Repository.replaceCourseBeans(Convert.courseResponseToBean(courseResponse.allCourse))
-                            state.snackbarHostState.showSnackbar("登录并保存成功")
                             onSuccess()
                         }
                     } else {

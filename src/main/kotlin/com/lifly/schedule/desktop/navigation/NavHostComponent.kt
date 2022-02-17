@@ -92,7 +92,10 @@ class NavHostComponent(
         val nowIndex = rememberSaveable  { mutableStateOf(0) }
         val nowIndex_ = index.collectAsState(-1)
         LaunchedEffect(nowIndex_.value){
-            if (nowIndex_.value>=0){ nowIndex.value = nowIndex_.value }
+            if (nowIndex_.value>=0){
+                nowIndex.value = nowIndex_.value
+                index.value = -1
+            }
         }
         Row(modifier = Modifier.fillMaxSize()) {
             NavigationRail {
