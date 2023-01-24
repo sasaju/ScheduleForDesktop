@@ -16,7 +16,6 @@ object CourseService {
         baseUrl:String,
         client:HttpClient
     ): IdResponse {
-        println("请求一次")
         val url = baseUrl+"timetable/getid/"
         return client.get(url).body<IdResponse>()
     }

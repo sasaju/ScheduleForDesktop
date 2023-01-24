@@ -5,10 +5,10 @@ import com.squareup.moshi.Moshi
 import java.io.File
 
 object SettingsSerializer{
+    private val path = System.getProperty("user.home")+"\\.scheduleDesktopData"
     val appSettings:AppSettings
         get() {
             return try{
-                println("读取一次")
                 getSettings()
             }catch (e:Exception){
                 AppSettings()
@@ -16,7 +16,7 @@ object SettingsSerializer{
         }
 
     private fun getSettings():AppSettings{
-        val settingJsonFile = File("app_setting.json")
+        val settingJsonFile = File("$path\\app_setting.json")
         val moshi: Moshi = Moshi.Builder().build()
         val jsonAdapter = moshi.adapter(AppSettings::class.java)
 

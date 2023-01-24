@@ -1,39 +1,40 @@
 package com.lifly.schedule.desktop.ui.show_timetable
 
-import androidx.compose.runtime.*
-import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.lifecycle.subscribe
-import com.lifly.schedule.desktop.logic.Repository
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import cafe.adriel.voyager.navigator.tab.Tab
+import cafe.adriel.voyager.navigator.tab.TabOptions
+import com.lifly.schedule.desktop.logic.Repository.logger
 import com.lifly.schedule.desktop.logic.dao.SettingsSerializer
-import com.lifly.schedule.desktop.logic.model.AppSettings
-import com.lifly.schedule.desktop.navigation.Component
-import com.lifly.schedule.desktop.ui.ShowCourse
-import java.util.logging.Logger
+import com.lifly.schedule.desktop.ui.ShowCourseAndNowWeek
 
-class ShowTimetableComponent(
-    private val componentContext: ComponentContext,
-) : Component, ComponentContext by componentContext {
-    private val logger: Logger = Repository.logger
-    lateinit var settings:AppSettings
+object ShowTimeTab : Tab {
 
-    init {
-        println("ShowTimetableComponent实例化一次")
-        lifecycle.subscribe(
-            onCreate = {
-                logger.info{"onCreate"}
-                settings=SettingsSerializer.appSettings
-//                logger.info { Repository.loadAllCourseToOneByOne().toString() }
-            },
-            onResume = { logger.info{"onResume"} }
-        )
-    }
+    override val options: TabOptions
+        @Composable
+        get() {
+            val title = "课表"
+            val icon = rememberVectorPainter(Icons.Default.Home)
+
+            return remember {
+                TabOptions(
+                    index = 0u,
+                    title = title,
+                    icon = icon
+                )
+            }
+        }
 
     @Composable
-    override fun render() {
-        val scope = rememberCoroutineScope()
+    override fun Content() {
         LaunchedEffect(Unit){
+            val settings=SettingsSerializer.appSettings
             logger.info { settings.userVersion.toString() }
         }
-        ShowCourse()
+        ShowCourseAndNowWeek()
     }
 }

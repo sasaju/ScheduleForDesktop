@@ -46,4 +46,8 @@ object Repository {
 //        val allBean = listOf<CourseBean>()
         return Convert.courseBeanToOneByOne2(allBean, getDefaultString())
     }
+
+    fun deleteAllCourseBean(){
+        CourseBeanDao.clearCourseBean()
+    }
 }

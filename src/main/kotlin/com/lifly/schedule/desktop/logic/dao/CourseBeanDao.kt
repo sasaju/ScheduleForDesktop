@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.ReplaceStatement
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.io.File
 import java.sql.Connection
 
 
@@ -18,7 +19,13 @@ object CourseBeanDao {
         create()
     }
     private fun connect() {
-        Database.connect("jdbc:sqlite:appData.db", "org.sqlite.JDBC")
+        // 由于程序更新会删除安装文件夹
+        val path = System.getProperty("user.home")+"\\.scheduleDesktopData"
+        val file = File(path)
+        if (!file.exists()){
+            file.mkdir()
+        }
+        Database.connect("jdbc:sqlite:${path}/appData.db", "org.sqlite.JDBC")
         TransactionManager.manager.defaultIsolationLevel =
             Connection.TRANSACTION_SERIALIZABLE
     }
@@ -28,6 +35,7 @@ object CourseBeanDao {
         connect()
         transaction {
 //            addLogger(StdOutSqlLogger)
+
             SchemaUtils.create(CourseBeans)
         }
     }
@@ -73,5 +81,11 @@ object CourseBeanDao {
             }
         }
         return a
+    }
+
+    fun clearCourseBean() {
+        transaction {
+            CourseBeans.deleteAll()
+        }
     }
 }

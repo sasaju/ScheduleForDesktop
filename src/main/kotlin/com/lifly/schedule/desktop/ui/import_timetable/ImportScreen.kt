@@ -61,7 +61,8 @@ fun Login(
                     scope.launch {
                         showLoad = false
                         nowLoginStatus= "正在加载"
-                        val result = Repository.getCourse2(user, password, id)
+                        val thisId = Repository.getId2().id
+                        val result = Repository.getCourse2(user, password, thisId)
                         onSuccess(result)
                         showLoad = true
                         nowLoginStatus = "登录"

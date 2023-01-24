@@ -5,19 +5,25 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Snackbar
-import androidx.compose.material.TextButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -27,20 +33,38 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lifly.schedule.desktop.logic.Repository
+import com.lifly.schedule.desktop.logic.Repository.logger
+import com.lifly.schedule.desktop.logic.dao.SettingsSerializer
+import com.lifly.schedule.desktop.logic.model.AppSettings
 import com.lifly.schedule.desktop.logic.model.OneByOneCourseBean
-import com.lifly.schedule.desktop.logic.model.getData
+import com.lifly.schedule.desktop.logic.util.GetDataUtil
+import com.lifly.schedule.desktop.logic.util.flowlayout.FlowRow
+import com.lifly.schedule.desktop.logic.util.flowlayout.MainAxisAlignment
 import com.lifly.schedule.desktop.logic.util.pager.ExperimentalPagerApi
 import com.lifly.schedule.desktop.logic.util.pager.HorizontalPager
+import com.lifly.schedule.desktop.logic.util.pager.PagerState
 import com.lifly.schedule.desktop.logic.util.pager.rememberPagerState
 import com.lifly.schedule.desktop.ui.show_timetable.*
 import kotlinx.coroutines.launch
 
+private val maxWeek = 19
+private fun Int.nowWeek() = if(this<maxWeek){this}else{0}
+@Composable
+fun ShowTimeTableAll(){
+    val scope = rememberCoroutineScope()
+    lateinit var settings: AppSettings
+    LaunchedEffect(Unit){
+        settings= SettingsSerializer.appSettings
+        logger.info { settings.userVersion.toString() }
+    }
+    ShowCourseAndNowWeek()
+}
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun ShowCourse(){
-    val state = rememberPagerState(initialPage = 0)
-    val scope = rememberCoroutineScope()
+fun ShowCourseAndNowWeek(){
+    val nowWeek = GetDataUtil.whichWeekNow().nowWeek()
+    val state = rememberPagerState(initialPage = nowWeek)
     suspend fun jumpPage(target:Int){
         when{
             target>state.pageCount-1 -> {
@@ -54,15 +78,160 @@ fun ShowCourse(){
             }
         }
     }
+    BoxWithConstraints {
+        val maxWidth = maxWidth
+        Row{
+            if (maxWidth.value > 720F) {
+                Box(
+                    modifier = Modifier.weight(1F)
+                ){
+                    ShowNowWeek(nowWeek, pagerState = state)
+                }
+            }
+            Box(
+                modifier = Modifier.weight(5F)
+            ){
+                ShowCourse(state)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+fun ShowNowWeek(
+    nowWeek:Int,
+    pagerState:PagerState
+){
+    val nowWeekOrNot = (pagerState.currentPage == nowWeek)
+    val scope = rememberCoroutineScope()
+    val userNowWeek = remember(pagerState.currentPage) { mutableStateOf(pagerState.currentPage+1) }
+    val startSchoolOrNot = GetDataUtil.startSchool()
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 10.dp, vertical = 15.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .clickable {
+                    scope.launch { pagerState.animateScrollToPage(nowWeek) }
+                }
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row {
+                Text(text = "第${userNowWeek.value}周", style = MaterialTheme.typography.titleLarge)
+            }
+            if (nowWeekOrNot && startSchoolOrNot) {
+                Text(text = "当前周", fontSize = 16.sp)
+            } else if (!startSchoolOrNot) {
+                Text(
+                    text = "距离开课\n${-GetDataUtil.startSchoolDay()}天",
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
+                )
+            }
+            if (GetDataUtil.whichWeekNow() > maxWeek) {
+                Text(text = "放假了，联系开发者更新", fontSize = 16.sp, color = Color.Gray)
+            }
+        }
+
+        FlowRow(
+            modifier = Modifier
+                .padding(10.dp)
+                .height(265.dp)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            mainAxisAlignment = MainAxisAlignment.Center
+        ) {
+            repeat(maxWeek){
+                TextButton(
+                    onClick = {
+                        scope.launch { pagerState.animateScrollToPage(it) }
+                    }
+                ){
+                    Text("第${it+1}周", style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+        }
+
+        Text(
+            "可以点击上述周数快速跳转\n\n也可以使用“←”和“→”（方向键左右）跳转下一周",
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(10.dp),
+            color = Color.Gray,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+
+}
+
+
+@OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
+@Composable
+fun ShowCourse(state:PagerState){
+    val scope = rememberCoroutineScope()
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit){
+        focusRequester.requestFocus()
+    }
+    suspend fun jumpPage(target:Int){
+        when{
+            target>state.pageCount-1 -> {
+//                state.animateScrollToPage(0)
+            }
+            target<0 ->{
+//                state.animateScrollToPage(state.pageCount-1)
+            }
+            else -> {
+                focusRequester.requestFocus()
+                state.animateScrollToPage(target)
+            }
+        }
+    }
+    Box(
+        modifier = Modifier
+            .focusRequester(focusRequester)
+            .onPreviewKeyEvent {
+                if (it.type== KeyEventType.KeyDown){
+                    when (it.key) {
+                        Key.DirectionRight -> {
+                            scope.launch { jumpPage(state.targetPage + 1) }
+                            return@onPreviewKeyEvent true
+                        }
+                        Key.DirectionLeft -> {
+                            scope.launch { jumpPage(state.targetPage - 1) }
+                            return@onPreviewKeyEvent true
+                        }
+                        Key.DirectionUp -> {
+                            scope.launch { jumpPage(state.targetPage -1) }
+                            return@onPreviewKeyEvent true
+                        }
+                        Key.DirectionDown -> {
+                            scope.launch { jumpPage(state.targetPage + 1) }
+                            return@onPreviewKeyEvent true
+                        }
+                        else -> return@onPreviewKeyEvent false
+                    }
+                }else{
+                    return@onPreviewKeyEvent false
+                }
+            }
+    ){ Spacer(modifier = Modifier.size(1.dp).focusable()) }
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
     ){
         Box(
             modifier = Modifier
                 .width(30.dp)
                 .fillMaxHeight()
                 .clickable {
-                    scope.launch { jumpPage(state.currentPage-1) }
+                    scope.launch { jumpPage(state.targetPage-1) }
                 }
             ,
             contentAlignment = Alignment.Center
@@ -71,8 +240,9 @@ fun ShowCourse(){
         }
         HorizontalPager(
             state=state,
-            count = 18,
-            modifier = Modifier.weight(1F, true)
+            count = maxWeek,
+            modifier = Modifier
+                .weight(1F, true)
         ) { page: Int ->
             SingleLineClass(
                 Repository.loadAllCourseToOneByOne(),
@@ -84,7 +254,7 @@ fun ShowCourse(){
                 .width(30.dp)
                 .fillMaxHeight()
                 .clickable {
-                    scope.launch { jumpPage(state.currentPage+1) }
+                    scope.launch { jumpPage(state.targetPage+1) }
                 }
             ,
             contentAlignment = Alignment.Center
